@@ -3,8 +3,8 @@ import copy
 
 
 def Memento(obj, deep=False):
-    state = (copy.copy, copy.deepcopy)[bool(deep)](obj.__dict__)
-    def Restore():
+    state = (copy.copy, copy.deepcopy)[bool(deep)](obj.__dict__) ##backup original state of an object
+    def Restore(): ##restore original state of an object
         obj.__dict__.clear()
         obj.__dict__.update(state)
     return Restore
@@ -16,9 +16,9 @@ class Transaction:
     def __init__(self, *targets):
         self.targets = targets
         self.Commit()
-    def Commit(self):
-        self.states = [Memento(target, self.deep) for target in self.targets]
-    def Rollback(self):
+    def Commit(self):##backup original state of objects
+        self.states = [Memento(target, self.deep) for target in self.targets] 
+    def Rollback(self):##restore original state of objects
         for state in self.states:
             state()
 
@@ -29,11 +29,11 @@ class transactional(object):
         self.method = method
     def __get__(self, obj, T):
         def transaction(*args, **kwargs):
-            state = Memento(obj)
+            state = Memento(obj)##backup original state of an object
             try:
-                return self.method(obj, *args, **kwargs)
+                return self.method(obj, *args, **kwargs)##call method eg:DoStuff
             except:
-                state()
+                state()##rollback or restore
                 raise
         return transaction
 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
       for i in range(3):
          n.Increment()
          print n
-      t.Commit()
+      t.Commit()##commit
       print '-- commited'
       for i in range(3):
          n.Increment()
@@ -67,7 +67,7 @@ if __name__ == '__main__':
       n.value += 'x' # will fail
       print n
    except:
-      t.Rollback()
+      t.Rollback()##rollback or restore
       print '-- rolled back'
    print n
    print '-- now doing stuff ...'
